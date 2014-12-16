@@ -1,0 +1,97 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}   % set up margins
+\usepackage{enumerate}              % fancy enumerate
+\usepackage{amsmath}                % used for \eqref{} in this document
+\usepackage{verbatim}               % useful for \begin{comment} and \end{comment}
+\usepackage{comment}
+\usepackage[pdftitle={Homework With knitr}, colorlinks=true, linkcolor=blue,
+citecolor=blue, urlcolor=blue, linktocpage=true, breaklinks=true]{hyperref}
+\usepackage{amsmath}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+%%%%%%%%%%%%%%%%   Sweave Options  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\SweaveOpts{fig.path='./Graphs/alan-', comment=NA, prompt=FALSE}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\title{Tables with \textbf{xtable} and \textbf{knitr}}
+%\author{Alan T. Arnholt\\ STT 3851}
+%\date{Spring 2012}
+\maketitle
+
+<<setup, echo = FALSE, results= 'hide', message = FALSE>>=
+
+
+opts_chunk$set(fig.width=12, fig.height=6, fig.path='RnwFigs/',
+               warning=FALSE, message=FALSE, tidy=FALSE)
+options(width=60)
+
+
+# install or call the packages used in the analysis
+doInstall <- FALSE # Change to TRUE if you do want packages installed.
+toInstall <- c("RODBC", "reshape", "plyr", "Gmisc", "ggplot2","gmodels", "xtable")
+if(doInstall){install.packages(toInstall, repos = "http://cran.us.r-project.org")}
+lapply(toInstall, library, character.only = TRUE)
+
+
+mtcars$am <- factor(mtcars$am, levels=0:1, labels=c("Automatic", "Manual"))
+
+mtcars$gear <- factor(mtcars$gear)
+
+# Make up some data for making it slightly more interesting
+mtcars$col <- factor(sample(c("red", "black", "silver"), size=NROW(mtcars), replace=TRUE))
+
+
+label(mtcars$mpg) <- "Gas"
+label(mtcars$wt) <- "Weight"
+label(mtcars$gear) <- "Gears"
+label(mtcars$col) <- "Car color"
+
+
+mpg_data <- getDescriptionStatsBy(mtcars$mpg, mtcars$am, statistics=TRUE, show_missing=TRUE, hrzl_prop = TRUE, html = FALSE)
+wt_data <- getDescriptionStatsBy(mtcars$wt, mtcars$am, statistics=TRUE, show_missing=TRUE, hrzl_prop = TRUE, html = FALSE)
+gear_data <- getDescriptionStatsBy(mtcars$gear, mtcars$am, statistics=TRUE, show_missing=TRUE, hrzl_prop = TRUE, html = FALSE)
+col_data <- getDescriptionStatsBy(mtcars$col, mtcars$am, statistics=TRUE, show_missing=TRUE, hrzl_prop = TRUE, html = FALSE)
+
+
+
+mpg_dataH <- getDescriptionStatsBy(mtcars$mpg, mtcars$am, statistics=TRUE, show_missing=TRUE, hrzl_prop = TRUE, html = TRUE)
+wt_dataH <- getDescriptionStatsBy(mtcars$wt, mtcars$am, statistics=TRUE, show_missing=TRUE, hrzl_prop = TRUE, html = TRUE)
+gear_dataH <- getDescriptionStatsBy(mtcars$gear, mtcars$am, statistics=TRUE, show_missing=TRUE, hrzl_prop = TRUE, html = TRUE)
+col_dataH <- getDescriptionStatsBy(mtcars$col, mtcars$am, statistics=TRUE, show_missing=TRUE, hrzl_prop = TRUE, html = TRUE)
+
+L <- htmlTable(rbind(gear_data, col_data),
+caption = "Factored variables",
+colheads = sprintf("%s (%%)", levels(mtcars$am),"stats"),
+rowlabel = "Variable",
+rgroup = c(label(gear_data),
+label(col_data)),
+n.rgroup = c(NROW(gear_data),
+NROW(col_data)),
+ctable = TRUE)
+
+h <- htmlTable(rbind(gear_dataH, col_dataH),
+caption = "Factored variables",
+colheads = sprintf("%s (%%)", levels(mtcars$am),"stats"),
+rowlabel = "Variable",
+rgroup = c(label(gear_data),
+label(col_data)),
+n.rgroup = c(NROW(gear_data),
+NROW(col_data)),
+ctable = TRUE)
+
+@
+
+<<label=tab13, echo = TRUE, results ='asis'>>=
+
+latex(L, file = "")
+
+latex(rbind(gear_data, col_data, mpg_data, col_data), file = "")
+
+@
+
+<<label=tab1, echo = TRUE, results ='asis'>>=
+
+h
+
+@
+
+\end{document}
